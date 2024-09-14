@@ -4,6 +4,6 @@ End-to-end projects showcasing how to integrate SAP systems with Generative AI p
 
 # Features:
 
-Connecting SAP S/4HANA with external AI platforms (OpenAI, Ollama, SAP Gen AI Hub).
-Generative AI for document processing and intelligent business workflows.
-Tutorials on using SAP BTP (Business Technology Platform) for AI integration.
+1. Connecting SAP S/4HANA with external AI platforms (OpenAI, Ollama, SAP Gen AI Hub).
+2. Generative AI for document processing and intelligent business workflows.
+3. Tutorials on using SAP BTP (Business Technology Platform) for AI integration.
