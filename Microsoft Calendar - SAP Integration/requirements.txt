@@ -1,4 +1,4 @@
-msal
+# msal
 fastapi
 uvicorn
 langchain
@@ -11,10 +11,16 @@ streamlit
 python-dotenv
 langchain_community
 python-multipart
-
 psycopg2-binary 
 sqlalchemy 
 scikit-learn
 loguru
 tqdm
 ai-api-client-sdk 
+# dotenv
+# fastapi
+# langchain_openai
+pandas
+loguru 
+pydantic
+fuzzywuzzy

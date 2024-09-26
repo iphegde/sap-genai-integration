@@ -23,6 +23,12 @@ from loguru import logger
 import openai
 import time
 from tqdm import tqdm
+from fastapi.middleware.cors import CORSMiddleware
+import logging
+from pydantic import BaseModel
+from typing import List
+from fuzzywuzzy import fuzz
+
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -56,7 +62,11 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 # Initialize the FastAPI app
 app = FastAPI()
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+class Query(BaseModel):
+    specs:str
 
 # Initialize the OpenAI LLM with API key
 llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model="gpt-4")
@@ -148,7 +158,7 @@ def get_embedding(text):
 def chat_completions(system, text, max_retries=5):
     url= "https://api.openai.com/v1/chat/completions"
     payload = {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4o",
         "messages": [
             {"role":"system", "content": system},
             {"role":"user", "content": text}
@@ -294,6 +304,79 @@ def process_csv_and_store_embeddings(csv_file_path):
 
     logger.info("Data processing and database insertion completed!")
 
+def execute_query(statement):
+    try:
+        conn = connect_to_db()
+        logger.info(f"conn value: {conn}")
+        cursor = conn.cursor()
+        logger.info(f"cursor value: {cursor}")
+        cursor.execute(statement)
+        rows = ''
+        if 'SELECT' in statement:
+            rows = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        logger.error(f"Error in execute_query: {e}")
+        raise
+
+def fetch_pspdescription_from_specs(specs,  listofpspdescription):
+    try:
+        system = f"This is the list of PSP Description: {str(listofpspdescription)}. Find the Description from the given text and respond within 2 words"
+        text=specs
+        pspdescriptionfromspecs = chat_completions(system,text)
+        return pspdescriptionfromspecs
+    except Exception as e:
+        logger.error(f"Error in fetch_pspdescription_from_specs: {e} ")
+        raise
+
+def fuzzypspdesc(listofpspdescription, pspdescriptionfromspecs):
+    try:
+        if not listofpspdescription:
+            raise ValueError("The list of PSP Description is empty.")
+        
+        fuzz_score = []
+        for pspdescription in listofpspdescription:
+            
+            fuzz_unique = {
+                "pspdescription": pspdescription[0],
+                "score": fuzz.ratio(pspdescription[0],pspdescriptionfromspecs)
+            }
+            fuzz_score.append(fuzz_unique)
+
+        if not fuzz_score:
+            raise ValueError("No fuzzy matches found.")
+        
+        sorted_data = sorted(fuzz_score, key=lambda x: x['score'],reverse=True)
+
+        # sorted_data = []
+        return sorted_data[0]['pspdescription']
+    except Exception as e:
+        logger.error(f"Error in fuzzypspdesc: {e}")
+        raise
+
+def fetch_prediction_vector_from_db(pspdescription: str , embedding:list):
+    try:
+        query = f"""
+        SELECT * FROM psp_data
+        WHERE description = %s
+        ORDER BY embedding <-> %s::vector
+        LIMIT 3
+        """
+        logger.info(f"Executing query for Precting PSP: {query}")
+        conn = connect_to_db()
+        cursor = conn.cursor()
+        cursor.execute(query, (pspdescription, embedding))
+        rows = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        logger.error(f"Error in fetch_prediction_vector_from_db: {e}")
+        raise
 
 @app.post("/insert_psp_data_to_db") 
 async def insert_psp_data_to_db():
@@ -312,22 +395,26 @@ async def insert_psp_data_to_db():
         raise HTTPException(status_code=500, detail="An unexpected error occurred while processing the PSP File.")
 
 
-@app.post("/networkvectors/vectorize") 
-async def networkvectors():
+@app.post("/pspshortdescvectors/vectorize") 
+async def pspshortdescvectors():
     try:
-        logger.info("Fetching distinct Network from psp_data table")
-        listofnetwork = execute_query("SELECT DISTINCT network FROM psp_data")
-        logger.info(f"Network numbers fetched: {listofnetwork}")
+        logger.info("Fetching distinct PSP based on description from psp_data table")
+        listofpspdescription = execute_query("SELECT DISTINCT description FROM psp_data")
+        logger.info(f"Network numbers fetched: {listofpspdescription}")
 
-        if not listofnetwork:
-            logger.warning("No Network numbers found in the psp_data table")
-            return {"status":"warning","message":"No Network Numders found"}
+        if not listofpspdescription:
+            logger.warning("No PSP Descriptions found in the psp_data table")
+            return {"status":"warning","message":"No PSP Descriptions found"}
         
-        for network in listofnetwork:
-            network_name = network['network_number'] if isinstance(network,dict) else network[0]
-            embedding = get_embedding(network_name)
-            statement = f"INSERT INTO "
+        for pspdescription in listofpspdescription:
+            description_name = pspdescription['description'] if isinstance(pspdescription,dict) else pspdescription[0]
+            embedding = get_embedding(description_name)
+            # statement = f"INSERT INTO description_text_embeddings '{description_name}' with embedding: {embedding}"
 
+            statement = f"INSERT INTO description_text_embeddings (description, embedding) VALUES ('{description_name}', '{embedding}')"
+
+            logger.info(f"Inserting PSP Description '{description_name}'with embedding: {embedding}")
+            execute_query(statement)
 
             # @@@Continue from here
 
@@ -338,9 +425,27 @@ async def networkvectors():
 @app.post("/predict_psp_as_per_calendar_data") 
 async def predict_psp_as_per_calendar_data(query: Query):
     try:
-        return
+        logger.info(f"Received query: {query}")
+        specs_embedding = get_embedding(query.specs)
+
+        listofpspdescription = execute_query("SELECT DISTINCT description FROM description_text_embeddings")
+        logger.info(f"PSP Descriptions fetched: {listofpspdescription}")
+
+        if not listofpspdescription:
+            logger.warning("No PSP description found in the description_text_embeddings table")
+            return{"status": "warning", "message":"No PSP Descriptions found"}
+        
+        pspdescriptionfromspecs = fetch_pspdescription_from_specs(query.specs, listofpspdescription)
+        logger.info(f"fetch_pspdescription_from_specs: {pspdescriptionfromspecs}")
+        pspdescription = fuzzypspdesc(listofpspdescription, pspdescriptionfromspecs)
+        logger.info(f"Desc Value: {pspdescription}")
+        
+        predictions = fetch_prediction_vector_from_db(pspdescription ,specs_embedding)
+
+        return {"Prediction": predictions, "PSP Description": pspdescription}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected error occurred while processing the PSP File.")
+        logger.error(f"Error fetching prediction of PSP: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/")
