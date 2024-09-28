@@ -24,3 +24,5 @@ pandas
 loguru 
 pydantic
 fuzzywuzzy
+streamlit_modal
+streamlit_ace

@@ -66,7 +66,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Query(BaseModel):
-    specs:str
+    title:str
+    body:str
 
 # Initialize the OpenAI LLM with API key
 llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model="gpt-4")
@@ -322,17 +323,18 @@ def execute_query(statement):
         logger.error(f"Error in execute_query: {e}")
         raise
 
-def fetch_pspdescription_from_specs(specs,  listofpspdescription):
+def fetch_pspdescription_from_title(title,  listofpspdescription):
     try:
-        system = f"This is the list of PSP Description: {str(listofpspdescription)}. Find the Description from the given text and respond within 2 words"
-        text=specs
+        system = f"""This is the list of PSP Description: {str(listofpspdescription)}. 
+        Retain the ID (example:P-00494-01-01 as it is) and try to Find a meaningful description/category from the text except the ID and respond within 4 words"""
+        text=title
         pspdescriptionfromspecs = chat_completions(system,text)
         return pspdescriptionfromspecs
     except Exception as e:
-        logger.error(f"Error in fetch_pspdescription_from_specs: {e} ")
+        logger.error(f"Error in fetch_pspdescription_from_title: {e} ")
         raise
 
-def fuzzypspdesc(listofpspdescription, pspdescriptionfromspecs):
+def fuzzypspdesc(listofpspdescription, pspdescriptionfromtitle):
     try:
         if not listofpspdescription:
             raise ValueError("The list of PSP Description is empty.")
@@ -342,7 +344,7 @@ def fuzzypspdesc(listofpspdescription, pspdescriptionfromspecs):
             
             fuzz_unique = {
                 "pspdescription": pspdescription[0],
-                "score": fuzz.ratio(pspdescription[0],pspdescriptionfromspecs)
+                "score": fuzz.ratio(pspdescription[0],pspdescriptionfromtitle)
             }
             fuzz_score.append(fuzz_unique)
 
@@ -357,18 +359,35 @@ def fuzzypspdesc(listofpspdescription, pspdescriptionfromspecs):
         logger.error(f"Error in fuzzypspdesc: {e}")
         raise
 
-def fetch_prediction_vector_from_db(pspdescription: str , embedding:list):
+def fetch_prediction_vector_from_db(description:str ,embedding:list):
     try:
-        query = f"""
-        SELECT * FROM psp_data
-        WHERE description = %s
-        ORDER BY embedding <-> %s::vector
-        LIMIT 3
-        """
-        logger.info(f"Executing query for Precting PSP: {query}")
+
         conn = connect_to_db()
         cursor = conn.cursor()
-        cursor.execute(query, (pspdescription, embedding))
+
+                # If description is provided, use it in the WHERE clause
+        if description:
+            query = """
+            SELECT * FROM psp_data
+            WHERE description = %s
+            ORDER BY embedding <-> %s::vector
+            LIMIT 3
+            """
+            cursor.execute(query, (description, embedding))
+        else:
+            # If description is not provided, exclude the WHERE clause
+            query = """
+            SELECT * FROM psp_data
+            ORDER BY embedding <-> %s::vector
+            LIMIT 3
+            """
+            cursor.execute(query, (embedding,))
+
+        # WHERE description = %s
+        # logger.info(f"Executing query for Precting PSP: {query}")
+
+        # cursor.execute(query, (pspdescription, embedding))
+        # cursor.execute(query, (embedding,))
         rows = cursor.fetchall()
         conn.commit()
         cursor.close()
@@ -413,7 +432,7 @@ async def pspshortdescvectors():
 
             statement = f"INSERT INTO description_text_embeddings (description, embedding) VALUES ('{description_name}', '{embedding}')"
 
-            logger.info(f"Inserting PSP Description '{description_name}'with embedding: {embedding}")
+            logger.info(f"Inserting PSP Description '{description_name}'with embedding")
             execute_query(statement)
 
             # @@@Continue from here
@@ -426,21 +445,27 @@ async def pspshortdescvectors():
 async def predict_psp_as_per_calendar_data(query: Query):
     try:
         logger.info(f"Received query: {query}")
-        specs_embedding = get_embedding(query.specs)
+        combined_text = f"{query.title} {query.body}"
+        embedding = get_embedding(combined_text)
+        # title_embedding = get_embedding(query.title)
+        # Concatenate the two embeddings (lists)
+        # embedding = title_embedding + body_embedding
+        # embedding_str = "[" + ",".join(map(str, embedding )) + "]"
 
-        listofpspdescription = execute_query("SELECT DISTINCT description FROM description_text_embeddings")
-        logger.info(f"PSP Descriptions fetched: {listofpspdescription}")
+        # listofpspdescription = execute_query("SELECT DISTINCT description FROM description_text_embeddings")
+        # logger.info(f"PSP Descriptions fetched: {listofpspdescription}")
 
-        if not listofpspdescription:
-            logger.warning("No PSP description found in the description_text_embeddings table")
-            return{"status": "warning", "message":"No PSP Descriptions found"}
+        # if not listofpspdescription:
+        #     logger.warning("No PSP description found in the description_text_embeddings table")
+        #     return{"status": "warning", "message":"No PSP Descriptions found"}
         
-        pspdescriptionfromspecs = fetch_pspdescription_from_specs(query.specs, listofpspdescription)
-        logger.info(f"fetch_pspdescription_from_specs: {pspdescriptionfromspecs}")
-        pspdescription = fuzzypspdesc(listofpspdescription, pspdescriptionfromspecs)
-        logger.info(f"Desc Value: {pspdescription}")
+        # pspdescriptionfromtitle = fetch_pspdescription_from_title(query.title, listofpspdescription)
+        # logger.info(f"fetch_pspdescription_from_specs: {pspdescriptionfromtitle}")
+        # pspdescription = fuzzypspdesc(listofpspdescription, pspdescriptionfromtitle)
+        # logger.info(f"Desc Value: {pspdescription}")
         
-        predictions = fetch_prediction_vector_from_db(pspdescription ,specs_embedding)
+        pspdescription=None
+        predictions = fetch_prediction_vector_from_db(pspdescription,embedding)
 
         return {"Prediction": predictions, "PSP Description": pspdescription}
     except Exception as e:
