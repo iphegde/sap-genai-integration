@@ -1,5 +1,5 @@
 
-## Goal = Convert Sami structured Data(pdf) into Structured Data(JSON)
+## Goal = Convert Semi structured Data(pdf) into Structured Data(JSON)
 
 ## Semi-structured Data example
 ## Traditional ML/Computer Vision - Pytesseract
