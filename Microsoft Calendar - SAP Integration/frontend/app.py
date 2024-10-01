@@ -117,6 +117,12 @@ import json
 from streamlit_ace import st_ace
 import requests
 
+
+
+# Set FastAPI backend URL
+FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
+
+
 # Initialize session state
 if 'config' not in st.session_state:
     st.session_state.config = {
@@ -160,6 +166,37 @@ with st.sidebar:
     # st.subheader("Current Configuration")
     # st.json(st.session_state.config)
 
+
+# Function to upload and process invoice
+def process_document(file , output_format):
+    """
+    Function to upload an invoice to the FastAPI backend for processing.
+    """
+    try:
+
+        data = {
+            "output_format": json.dumps(output_format),  # Convert output_format to a string if it's a dictionary
+        }
+
+        files = {'file': (file.name, file.getvalue(), "application/pdf")}
+        response = requests.post(f"{FASTAPI_URL}/process_invoice/", files=files , data=data)
+        if response.status_code == 200:
+            st.success("Invoice processed and stored successfully.")
+            # Display the extracted JSON details
+            response_data = response.json()
+            with tab1:
+                st.subheader("Extracted Invoice Details:")
+                st.json(response_data.get("extracted_data", {}))  # Access the 'extracted_data' field from response
+        else:
+            with tab2:
+                st.error(f"Error: {response.json()['detail']}")
+    except Exception as e:
+        with tab1:
+            st.error(f"Failed to process the invoice: {e}")
+
+
+output_format = {}
+
 # Main content
 tab1, tab2, tab3 = st.tabs(["Insert PSP Data", "Get PSP Vectors", "Predict PSP"])
 
@@ -171,10 +208,16 @@ def update_current_tab(tab_name):
 with tab1:
     update_current_tab("Insert PSP Data")
     st.header("Insert PSP data into Database")
-    psp_data = st.text_area("Enter PSP data:")
-    if st.button("Submit", key="insert_submit"):
-        result = call_api("insert_psp", {"data": psp_data})
-        st.json(result)
+
+    st.write("Upload a CSV to extract and store its details in the database.")
+    uploaded_file = st.file_uploader("Choose a csv file", type="csv")
+
+    
+
+    # psp_data = st.text_area("Enter PSP data:")
+    # if st.button("Submit", key="insert_submit"):
+    #     result = call_api("insert_psp", {"data": psp_data})
+    #     st.json(result)
 
 # Tab 2: Get PSP short Vectors
 with tab2:
@@ -221,3 +264,17 @@ with tab3:
         if st.button("Predict PSP", key="predict_psp"):
             result = call_api("predict_psp", {"title": title, "body": body})
             st.json(result)
+
+
+with tab1:
+    # Only process invoice if the button is clicked
+    # Display PDF only if uploaded
+    # if uploaded_file is not None:
+        #  display_pdf(uploaded_file)
+    # Create a global dictionary to store the JSON format
+
+    if st.button("Process Document") and uploaded_file is not None:
+         with tab1:
+            with st.spinner("Processing..."):
+                result = process_document(uploaded_file, output_format)  # Call your processing function
+                st.json(result)  # Display the processed JSON data
