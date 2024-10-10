@@ -26,3 +26,4 @@ pydantic
 fuzzywuzzy
 streamlit_modal
 streamlit_ace
+loguru
