@@ -1,14 +1,14 @@
 fastapi
 uvicorn
 langchain
-langchain-core
-langchain-openai
+langchain_core
+langchain_openai
 openai
 pdfplumber
 requests
 streamlit
 langchain_community
-psycopg2-binary 
+psycopg2_binary 
 sqlalchemy 
 loguru
 tqdm
