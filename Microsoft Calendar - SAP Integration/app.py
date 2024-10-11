@@ -294,6 +294,37 @@ with st.sidebar:
     # st.json(st.session_state.config)
 
 
+def get_psp_network(subject, bodyPreview):
+    """
+    Function to upload an CSV to the FastAPI backend for processing.
+    """
+    try:
+        # Prepare the file data for the request
+            # files = {'file': (uploaded_file.name, uploaded_file, "text/csv")}
+            # files = {'file': (file.name, file.getvalue(), "text/csv")}
+            # write_logs(text= f"values = {type(files)} ,  {files} ")
+
+            payload = {
+                "title": subject,  # Directly assign the string value
+                "body": bodyPreview     # Directly assign the string value
+            }
+
+            # Make the POST request to the FastAPI endpoint
+            response = requests.post(f"{FASTAPI_URL}/predict_psp_as_per_calendar_data/", json=payload)
+            # Check the response status
+            if response.status_code == 200:
+                # st.success("File processed and stored successfully.")
+                return response.json()
+                # # Display the extracted JSON details
+                # response_data = response.json()
+                # st.json(response_data)  # Display JSON response for better readability
+            else:
+                st.error("Error processing the Calendar.")
+                st.write(f"Status code: {response.status_code}, Message: {response.text}")
+    except Exception as e:
+        with tab1:
+            st.error(f"Failed to process the Calendar.: {e}")
+
 # Function to upload and process invoice
 def process_document(file):
     """
@@ -392,12 +423,48 @@ with tab3:
         st.subheader("Calendar Data")
         st.write(displayTable)
 
-        if displayTable is not None and st.button("Book time in SAP"):
+        # Add new columns for PSP element, Network Number, and PSP Short Description
+        displayTable['PSP Element'] = ""
+        displayTable['Network Number'] = ""
+        displayTable['PSP Short Description'] = ""
+
+        # Check if displayTable is not None and button is clicked
+        if displayTable is not None and st.button("Get PSP Element and Network from Vector Data"):
+         with st.spinner("Processing..."):
             try:
+                # Iterate over rows using itertuples and update new columns with predictions
+                for idx, row in enumerate(displayTable.itertuples(index=False)):
+                    subject = row.subject
+                    bodyPreview = row.bodyPreview
+
+                    # Log the extracted values
+                    # write_logs(text=f"values --------------------------> = {subject} and {bodyPreview}")
+
+                    # Get predictions (assumed function call to get the response)
+                    predictions = get_psp_network(subject, bodyPreview)
+
+                    # Extract predictions from response
+                    psp_element = predictions.get("PSP Element", "")
+                    network_number = predictions.get("Network Number", "")
+                    psp_short_description = predictions.get("PSP Short Description", "")
+
+                    # Add the predictions back to the DataFrame
+                    displayTable.at[idx, 'PSP Element'] = psp_element
+                    displayTable.at[idx, 'Network Number'] = network_number
+                    displayTable.at[idx, 'PSP Short Description'] = psp_short_description
+
+                # Display the updated table with new columns
+                st.subheader("Updated Calendar Data with PSP and Network Information")
+                st.write(displayTable)
+
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+        # if displayTable is not None and st.button("Book time in SAP"):
+        #     try:
                 
-                st.success("Configuration saved successfully!")
-            except json.JSONDecodeError:
-                st.error("Invalid JSON. Please check your configuration.")
+        #         st.success("Configuration saved successfully!")
+        #     except json.JSONDecodeError:
+        #         st.error("Invalid JSON. Please check your configuration.")
 
     # # with right_col:
     # st.subheader("Predict PSP")

@@ -17,22 +17,22 @@ logger = logging.getLogger(__name__)
 import time
 
 
-def write_logs(file_path = "logfile_MS.txt" , text=None):
-    try:
-        # Open the file in append mode ('a') to write logs
-        with open(file_path, "a") as file:
-            file.write(text + "\n")  # Write the text and add a newline character
-        print(f"Log written to {file_path}")
-    except Exception as e:
-        print(f"Error writing to file: {e}")
-def write_logs(file_path = "logfile_MS.txt" , text=None):
-    try:
-        # Open the file in append mode ('a') to write logs
-        with open(file_path, "a") as file:
-            file.write(text + "\n")  # Write the text and add a newline character
-        print(f"Log written to {file_path}")
-    except Exception as e:
-        print(f"Error writing to file: {e}")
+# def write_logs(file_path = "logfile_MS.txt" , text=None):
+#     try:
+#         # Open the file in append mode ('a') to write logs
+#         with open(file_path, "a") as file:
+#             file.write(text + "\n")  # Write the text and add a newline character
+#         print(f"Log written to {file_path}")
+#     except Exception as e:
+#         print(f"Error writing to file: {e}")
+# def write_logs(file_path = "logfile_MS.txt" , text=None):
+#     try:
+#         # Open the file in append mode ('a') to write logs
+#         with open(file_path, "a") as file:
+#             file.write(text + "\n")  # Write the text and add a newline character
+#         print(f"Log written to {file_path}")
+#     except Exception as e:
+#         print(f"Error writing to file: {e}")
 
 
 # Global variables to cache the token and expiration time
@@ -93,8 +93,8 @@ def get_calendar_of_user(userId):
 
     access_token = (get_azure_access_token())
     
-    write_logs(text= f"Token Received = {access_token_cache['token']}, UserID ={userId}")
-    write_logs(text= f"Token Received = {access_token_cache['token']}, UserID ={userId}")
+    # write_logs(text= f"Token Received = {access_token_cache['token']}, UserID ={userId}")
+    # write_logs(text= f"Token Received = {access_token_cache['token']}, UserID ={userId}")
 
     if not access_token:
         logger.error("Access token could not be retrieved. Cannot proceed.")
