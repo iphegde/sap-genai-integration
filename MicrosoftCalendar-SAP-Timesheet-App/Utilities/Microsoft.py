@@ -1,10 +1,9 @@
-from dotenv import load_dotenv
 import os
 import requests
-# Load environment variables from the .env file
-
 from loguru import logger
 import logging
+from dotenv import load_dotenv
+
 load_dotenv()
 
 # Database connection settings retrieved from environment variables
