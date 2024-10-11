@@ -8,15 +8,15 @@ openai
 pdfplumber
 requests
 streamlit
-python-dotenv
+# python-dotenv
 langchain_community
-python-multipart
+# python-multipart
 psycopg2-binary 
 sqlalchemy 
-scikit-learn
+# scikit-learn
 loguru
 tqdm
-ai-api-client-sdk 
+# ai-api-client-sdk 
 # dotenv
 # fastapi
 # langchain_openai
