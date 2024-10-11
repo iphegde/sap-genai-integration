@@ -335,7 +335,7 @@ def process_document(file):
         # Prepare the file data for the request
             # files = {'file': (uploaded_file.name, uploaded_file, "text/csv")}
             files = {'file': (file.name, file.getvalue(), "text/csv")}
-            write_logs(text= f"values = {type(files)} ,  {files} ")
+            # write_logs(text= f"values = {type(files)} ,  {files} ")
             response = requests.post(f"{FASTAPI_URL}/insert_psp_data_to_db/", files=files)
             # Check the response status
             if response.status_code == 200:
