@@ -121,7 +121,7 @@ import sys
 import os
 # Add project root (parent directory of 'frontend') to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+print(sys.path)
 from Utilities.Microsoft import get_calendar_of_user
 
 # Set FastAPI backend URL
