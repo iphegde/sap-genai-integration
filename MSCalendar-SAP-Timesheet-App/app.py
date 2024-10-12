@@ -119,6 +119,8 @@ import requests
 import pandas as pd
 import sys
 import os
+from pathlib import Path
+
 # Add project root (parent directory of 'frontend') to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 print(sys.path)
@@ -398,7 +400,8 @@ with tab2:
 with tab3:
     update_current_tab("Predict PSP")
 
-    user_data = pd.read_csv("Data/AzureUsers.csv")
+    # user_data = pd.read_csv("Data/AzureUsers.csv")
+    user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
 
     st.subheader("Select a user")
     # Extract DisplayName list for the dropdown
