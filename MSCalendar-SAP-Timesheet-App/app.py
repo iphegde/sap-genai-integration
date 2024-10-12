@@ -400,8 +400,13 @@ with tab2:
 with tab3:
     update_current_tab("Predict PSP")
 
+    uploaded_file = st.file_uploader("Choose a CSV file")
+    if uploaded_file is not None:
+        user_data = pd.read_csv(uploaded_file)
+
+
     # user_data = pd.read_csv("Data/AzureUsers.csv")
-    user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
+    # user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
 
     st.subheader("Select a user")
     # Extract DisplayName list for the dropdown
