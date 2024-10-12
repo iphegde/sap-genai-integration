@@ -127,8 +127,9 @@ print(sys.path)
 from Utilities.Microsoft import get_calendar_of_user
 
 # Set FastAPI backend URL
-FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
+# FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
 
+FASTAPI_URL = "https://sap-genai-integration-mssaptimesheet.onrender.com"
 
 def write_logs(file_path = "logfile.txt" , text=None):
     try:
