@@ -399,89 +399,94 @@ with tab2:
 # Tab 3: Predict PSP
 with tab3:
     update_current_tab("Predict PSP")
+    
+#     test = f"""userPrincipalName,displayName,surname,mail,givenName,id,userType,jobTitle,department,accountEnabled,usageLocation,streetAddress,state,country,officeLocation,city,postalCode,telephoneNumber,mobilePhone,alternateEmailAddress,ageGroup,consentProvidedForMinor,legalAgeGroupClassification,companyName,creationType,directorySynced,invitationState,identityIssuer,createdDateTime
+# IsaiahL@14jc80.onmicrosoft.com,Isaiah Langer,Langer,IsaiahL@14jc80.onmicrosoft.com,Isaiah,1ee8cad3-49cc-439e-8e36-6e72a1e0c596,Member,Sales Rep,Sales,True,US,"7633 E. 63rd Place, Suite 300",OK,United States,20/1101,Tulsa,74133,'+1 918 555 0101,,,,,,,,,,14jc80.onmicrosoft.com,9/13/2024 6:56:53 PM
+# JohannaL@14jc80.onmicrosoft.com,Johanna Lorenz,Lorenz,JohannaL@14jc80.onmicrosoft.com,Johanna,451fd2d7-a141-4dc7-92bf-fba38ef7b306,Member,Senior Engineer,Engineering,True,US,"9900 Corporate Campus Dr., Suite 3000",KY,United States,23/2102,Louisville,40223,'+1 502 555 0102,,,,,,,,,,14jc80.onmicrosoft.com,9/13/2024 6:56:58 PM"""
+#     st.write(test)
 
-    uploaded_file = st.file_uploader("Choose a CSV file")
+    uploaded_file = st.file_uploader("Upload the User Data - CSV file")
     if uploaded_file is not None:
         user_data = pd.read_csv(uploaded_file)
 
 
-    # user_data = pd.read_csv("Data/AzureUsers.csv")
-    # user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
+        # user_data = pd.read_csv("Data/AzureUsers.csv")
+        # user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
 
-    st.subheader("Select a user")
-    # Extract DisplayName list for the dropdown
-    display_names =  ['Select a user'] + user_data['displayName'].tolist()
-    # Streamlit dropdown for selecting a DisplayName
-    selected_name = st.selectbox( '', display_names)
-    if selected_name == 'Select a user':
-        st.warning("Please select a user to proceed.")
-    else:
-        user_id = user_data[user_data['displayName'] == selected_name]['id'].values[0]
-        # st.write(f"{user_id}")
-        # return user_id
+        st.subheader("Select a user")
+        # Extract DisplayName list for the dropdown
+        display_names =  ['Select a user'] + user_data['displayName'].tolist()
+        # Streamlit dropdown for selecting a DisplayName
+        selected_name = st.selectbox( '', display_names)
+        if selected_name == 'Select a user':
+            st.warning("Please select a user to proceed.")
+        else:
+            user_id = user_data[user_data['displayName'] == selected_name]['id'].values[0]
+            # st.write(f"{user_id}")
+            # return user_id
 
-        # Call function to update calendarJson when user selection changes
-        update_calendar(user_id)
+            # Call function to update calendarJson when user selection changes
+            update_calendar(user_id)
 
-        # write_logs(text= f"CalenderJson {user_id} {st.session_state.calendarJson}")
-        # st.header("Predict PSP from Meeting Data")
-            
-        displayTable = convert_json_to_table()
-
-        st.subheader("Calendar Data")
-        st.write(displayTable)
-
-        # Add new columns for PSP element, Network Number, and PSP Short Description
-        displayTable['PSP Element'] = ""
-        displayTable['Network Number'] = ""
-        displayTable['PSP Short Description'] = ""
-
-        # Check if displayTable is not None and button is clicked
-        if displayTable is not None and st.button("Get PSP Element and Network from Vector Data"):
-         with st.spinner("Processing..."):
-            try:
-                # Iterate over rows using itertuples and update new columns with predictions
-                for idx, row in enumerate(displayTable.itertuples(index=False)):
-                    subject = row.subject
-                    bodyPreview = row.bodyPreview
-
-                    # Log the extracted values
-                    # write_logs(text=f"values --------------------------> = {subject} and {bodyPreview}")
-
-                    # Get predictions (assumed function call to get the response)
-                    predictions = get_psp_network(subject, bodyPreview)
-
-                    # Extract predictions from response
-                    psp_element = predictions.get("PSP Element", "")
-                    network_number = predictions.get("Network Number", "")
-                    psp_short_description = predictions.get("PSP Short Description", "")
-
-                    # Add the predictions back to the DataFrame
-                    displayTable.at[idx, 'PSP Element'] = psp_element
-                    displayTable.at[idx, 'Network Number'] = network_number
-                    displayTable.at[idx, 'PSP Short Description'] = psp_short_description
-
-                # Display the updated table with new columns
-                st.subheader("Updated Calendar Data with PSP and Network Information")
-                st.write(displayTable)
-
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-        # if displayTable is not None and st.button("Book time in SAP"):
-        #     try:
+            # write_logs(text= f"CalenderJson {user_id} {st.session_state.calendarJson}")
+            # st.header("Predict PSP from Meeting Data")
                 
-        #         st.success("Configuration saved successfully!")
-        #     except json.JSONDecodeError:
-        #         st.error("Invalid JSON. Please check your configuration.")
+            displayTable = convert_json_to_table()
 
-    # # with right_col:
-    # st.subheader("Predict PSP")
-    # title = st.text_input("Title")
-    # body = st.text_area("Body")
-    
-    # if st.button("Predict PSP", key="predict_psp"):
-    #     result = call_api("predict_psp", {"title": title, "body": body})
-    #     st.json(result)
+            st.subheader("Calendar Data")
+            st.write(displayTable)
+
+            # Add new columns for PSP element, Network Number, and PSP Short Description
+            displayTable['PSP Element'] = ""
+            displayTable['Network Number'] = ""
+            displayTable['PSP Short Description'] = ""
+
+            # Check if displayTable is not None and button is clicked
+            if displayTable is not None and st.button("Get PSP Element and Network from Vector Data"):
+             with st.spinner("Processing..."):
+                try:
+                    # Iterate over rows using itertuples and update new columns with predictions
+                    for idx, row in enumerate(displayTable.itertuples(index=False)):
+                        subject = row.subject
+                        bodyPreview = row.bodyPreview
+
+                        # Log the extracted values
+                        # write_logs(text=f"values --------------------------> = {subject} and {bodyPreview}")
+
+                        # Get predictions (assumed function call to get the response)
+                        predictions = get_psp_network(subject, bodyPreview)
+
+                        # Extract predictions from response
+                        psp_element = predictions.get("PSP Element", "")
+                        network_number = predictions.get("Network Number", "")
+                        psp_short_description = predictions.get("PSP Short Description", "")
+
+                        # Add the predictions back to the DataFrame
+                        displayTable.at[idx, 'PSP Element'] = psp_element
+                        displayTable.at[idx, 'Network Number'] = network_number
+                        displayTable.at[idx, 'PSP Short Description'] = psp_short_description
+
+                    # Display the updated table with new columns
+                    st.subheader("Updated Calendar Data with PSP and Network Information")
+                    st.write(displayTable)
+
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
+            # if displayTable is not None and st.button("Book time in SAP"):
+            #     try:
+                    
+            #         st.success("Configuration saved successfully!")
+            #     except json.JSONDecodeError:
+            #         st.error("Invalid JSON. Please check your configuration.")
+
+        # # with right_col:
+        # st.subheader("Predict PSP")
+        # title = st.text_input("Title")
+        # body = st.text_area("Body")
+        
+        # if st.button("Predict PSP", key="predict_psp"):
+        #     result = call_api("predict_psp", {"title": title, "body": body})
+        #     st.json(result)
 
 
 with tab1:
