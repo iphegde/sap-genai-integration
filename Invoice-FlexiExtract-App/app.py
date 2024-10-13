@@ -8,7 +8,10 @@ import json
 # from backend.main import default_json
 
 # Set FastAPI backend URL
-FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
+# FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
+
+
+FASTAPI_URL = "https://sap-genai-integration-invoice.onrender.com"
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Invoice Processing and Comparison", layout="wide")
