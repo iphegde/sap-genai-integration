@@ -265,7 +265,7 @@ def get_final_gpt_text_chatcomp( psp_element,network_number,description,detailed
 def connect_to_db():
     try:
         conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
-        logger.info(f"DB Connection: host={DB_HOST}, dbname={DB_NAME}, user={DB_USER}, password={DB_PASSWORD} > Connection: {conn}")
+        # logger.info(f"DB Connection: host={DB_HOST}, dbname={DB_NAME}, user={DB_USER}, password={DB_PASSWORD} > Connection: {conn}")
         return conn
     except Exception as e:
         print(f"Error connecting to database: {e}")
@@ -375,29 +375,29 @@ def fuzzypspdesc(listofpspdescription, pspdescriptionfromtitle):
         raise
 
 # Function to fetch data
-def get_psp_data(description: str, embedding: str):
-    # Query data from 'psp_data' table with matching description
-    try:
-        # Initialize Supabase client
-        url: str = os.environ.get("SUPABASE_URL")
-        key: str = os.environ.get("SUPABASE_KEY")
-        supabase: Client = create_client(url, key)
+# def get_psp_data(description: str, embedding: str):
+#     # Query data from 'psp_data' table with matching description
+#     try:
+#         # Initialize Supabase client
+#         url: str = os.environ.get("SUPABASE_URL")
+#         key: str = os.environ.get("SUPABASE_KEY")
+#         supabase: Client = create_client(url, key)
 
-        # Supabase query example
-        response = supabase.from_("psp_data").select("*").eq("description", description).limit(3).execute()
+#         # Supabase query example
+#         response = supabase.from_("psp_data").select("*").eq("description", description).limit(3).execute()
         
-        if response.data:
-            # Here you'd need to handle the embedding <-> vector logic separately
-            # Supabase might not support such vector operations directly via SQL, so this requires further handling
-            write_logs(text= f"success {response.data}")
-            return response.data
-        else:
-            write_logs(text= f"No data found")
-            return {"message": "No data found"}
+#         if response.data:
+#             # Here you'd need to handle the embedding <-> vector logic separately
+#             # Supabase might not support such vector operations directly via SQL, so this requires further handling
+#             write_logs(text= f"success {response.data}")
+#             return response.data
+#         else:
+#             write_logs(text= f"No data found")
+#             return {"message": "No data found"}
     
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        return {"message": "Failed to fetch data"}
+#     except Exception as e:
+#         print(f"Error occurred: {e}")
+#         return {"message": "Failed to fetch data"}
 
 
 def fetch_prediction_vector_from_db(description:str ,embedding:list):
@@ -406,9 +406,9 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
         conn = connect_to_db()
         cursor = conn.cursor()
         
-        logger.info(f"Conn: {conn}, Cursor> {cursor}")
+        # logger.info(f"Conn: {conn}, Cursor> {cursor}")
 
-        write_logs(text= f"Conn: {conn}, Cursor> {cursor}")
+        # write_logs(text= f"Conn: {conn}, Cursor> {cursor}")
 
         # If description is provided, use it in the WHERE clause
         if description:
@@ -418,7 +418,7 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
             ORDER BY embedding <-> %s::vector
             LIMIT 3
             """
-            logger.info(f"Query> {query}")
+            # logger.info(f"Query> {query}")
             cursor.execute(query, (description, embedding))
         else:
             # If description is not provided, exclude the WHERE clause
@@ -507,7 +507,7 @@ async def pspshortdescvectors():
 @app.post("/predict_psp_as_per_calendar_data") 
 async def predict_psp_as_per_calendar_data(query: Query):
     try:
-        write_logs(text= f"Received query: {query}")
+        # write_logs(text= f"Received query: {query}")
         logger.info(f"Received query: {query}")
         combined_text = f"{query.title} {query.body}"
         embedding = get_embedding(combined_text)
