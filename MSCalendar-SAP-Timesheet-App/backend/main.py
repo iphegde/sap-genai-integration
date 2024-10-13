@@ -375,6 +375,8 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
 
         conn = connect_to_db()
         cursor = conn.cursor()
+        
+        write_logs(text= f"Conn: {conn}, Cursor> {cursor}")
 
                 # If description is provided, use it in the WHERE clause
         if description:
@@ -472,6 +474,7 @@ async def pspshortdescvectors():
 @app.post("/predict_psp_as_per_calendar_data") 
 async def predict_psp_as_per_calendar_data(query: Query):
     try:
+        write_logs(text= f"Received query: {query}")
         logger.info(f"Received query: {query}")
         combined_text = f"{query.title} {query.body}"
         embedding = get_embedding(combined_text)
