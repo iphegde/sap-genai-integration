@@ -456,20 +456,20 @@ with tab3:
 
                         # Get predictions (assumed function call to get the response)
                         predictions = get_psp_network(subject, bodyPreview)
-                        st.write(predictions)
+                        # st.write(predictions)
                         # Extract predictions from response
-                    #     psp_element = predictions.get("PSP Element", "")
-                    #     network_number = predictions.get("Network Number", "")
-                    #     psp_short_description = predictions.get("PSP Short Description", "")
+                        psp_element = predictions.get("PSP Element", "")
+                        network_number = predictions.get("Network Number", "")
+                        psp_short_description = predictions.get("PSP Short Description", "")
 
                     #     # Add the predictions back to the DataFrame
-                    #     displayTable.at[idx, 'PSP Element'] = psp_element
-                    #     displayTable.at[idx, 'Network Number'] = network_number
-                    #     displayTable.at[idx, 'PSP Short Description'] = psp_short_description
+                        displayTable.at[idx, 'PSP Element'] = psp_element
+                        displayTable.at[idx, 'Network Number'] = network_number
+                        displayTable.at[idx, 'PSP Short Description'] = psp_short_description
 
-                    # # Display the updated table with new columns
-                    # st.subheader("Updated Calendar Data with PSP and Network Information")
-                    # st.write(displayTable)
+                    # Display the updated table with new columns
+                    st.subheader("Updated Calendar Data with PSP and Network Information")
+                    st.write(displayTable)
 
                 except Exception as e:
                     st.error(f"An error occurred: {e}")

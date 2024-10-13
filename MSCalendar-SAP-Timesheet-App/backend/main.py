@@ -407,7 +407,7 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
         
         write_logs(text= f"Conn: {conn}, Cursor> {cursor}")
 
-                # If description is provided, use it in the WHERE clause
+        # If description is provided, use it in the WHERE clause
         if description:
             query = """
             SELECT * FROM public.psp_data
@@ -529,20 +529,20 @@ async def predict_psp_as_per_calendar_data(query: Query):
         # FastAPI Route
         # @app.post("/search")
         # def search_data(description: str, embedding: str):
-        test = get_psp_data(pspdescription, embedding)
-        return test
+        # test = get_psp_data(pspdescription, embedding)
+        # return test
         
 
 
-        # predictions = fetch_prediction_vector_from_db(pspdescription,embedding)
+        predictions = fetch_prediction_vector_from_db(pspdescription,embedding)
 
-        # # Extract the relevant values (2nd, 3rd, and 4th)
-        # # Assuming you are working with the first sub-list from api_response
-        # return{
-        #     "PSP Element": predictions[0][1],  # 2nd element in the list
-        #     "Network Number": predictions[0][2],  # 3rd element in the list
-        #     "PSP Short Description": predictions[0][3]   # 4th element in the list
-        # }
+        # Extract the relevant values (2nd, 3rd, and 4th)
+        # Assuming you are working with the first sub-list from api_response
+        return{
+           "PSP Element": predictions[0][1],  # 2nd element in the list
+           "Network Number": predictions[0][2],  # 3rd element in the list
+           "PSP Short Description": predictions[0][3]   # 4th element in the list
+        }
 
 
         # return {"Prediction": predictions, "PSP Description": pspdescription}
