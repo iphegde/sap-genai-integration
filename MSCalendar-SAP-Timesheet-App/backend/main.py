@@ -413,7 +413,7 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
         # If description is provided, use it in the WHERE clause
         if description:
             query = """
-            SELECT * FROM public.psp_data
+            SELECT * FROM psp_data
             WHERE description = %s
             ORDER BY embedding <-> %s::vector
             LIMIT 3
@@ -423,7 +423,7 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
         else:
             # If description is not provided, exclude the WHERE clause
             query = """
-            SELECT * FROM public.psp_data
+            SELECT * FROM psp_data
             ORDER BY embedding <-> %s::vector
             LIMIT 3
             """
