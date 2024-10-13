@@ -265,6 +265,7 @@ def get_final_gpt_text_chatcomp( psp_element,network_number,description,detailed
 def connect_to_db():
     try:
         conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+        logger.info(f"DB Connection: host={DB_HOST}, dbname={DB_NAME}, user={DB_USER}, password={DB_PASSWORD} > Connection: {conn}")
         return conn
     except Exception as e:
         print(f"Error connecting to database: {e}")
@@ -405,6 +406,8 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
         conn = connect_to_db()
         cursor = conn.cursor()
         
+        logger.info(f"Conn: {conn}, Cursor> {cursor}")
+
         write_logs(text= f"Conn: {conn}, Cursor> {cursor}")
 
         # If description is provided, use it in the WHERE clause
@@ -415,6 +418,7 @@ def fetch_prediction_vector_from_db(description:str ,embedding:list):
             ORDER BY embedding <-> %s::vector
             LIMIT 3
             """
+            logger.info(f"Query> {query}")
             cursor.execute(query, (description, embedding))
         else:
             # If description is not provided, exclude the WHERE clause
