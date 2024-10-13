@@ -31,6 +31,13 @@ from typing import List
 from fuzzywuzzy import fuzz
 # from frontend.app import write_logs
 
+from supabase import create_client, Client
+
+# Initialize Supabase client
+url: str = "https://grofmmixevqtoufmlqsr.supabase.co"
+key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdyb2ZtbWl4ZXZxdG91Zm1scXNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5NDU0MTMsImV4cCI6MjA0MjUyMTQxM30.dv1mwqZEh9QC8_yH05AUDeZE8s36SsqpUickVoOvKMY"
+supabase: Client = create_client(url, key)
+
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -370,6 +377,27 @@ def fuzzypspdesc(listofpspdescription, pspdescriptionfromtitle):
         logger.error(f"Error in fuzzypspdesc: {e}")
         raise
 
+# Function to fetch data
+def get_psp_data(description: str, embedding: str):
+    # Query data from 'psp_data' table with matching description
+    try:
+        # Supabase query example
+        response = supabase.from_("psp_data").select("*").eq("description", description).limit(3).execute()
+        
+        if response.data:
+            # Here you'd need to handle the embedding <-> vector logic separately
+            # Supabase might not support such vector operations directly via SQL, so this requires further handling
+            write_logs(text= f"success {response.data}")
+            return response.data
+        else:
+            write_logs(text= f"No data found")
+            return {"message": "No data found"}
+    
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return {"message": "Failed to fetch data"}
+
+
 def fetch_prediction_vector_from_db(description:str ,embedding:list):
     try:
 
@@ -496,6 +524,13 @@ async def predict_psp_as_per_calendar_data(query: Query):
         # logger.info(f"Desc Value: {pspdescription}")
         
         pspdescription=None
+
+        # FastAPI Route
+        # @app.post("/search")
+        # def search_data(description: str, embedding: str):
+        get_psp_data(pspdescription, embedding)
+
+
         predictions = fetch_prediction_vector_from_db(pspdescription,embedding)
 
         # Extract the relevant values (2nd, 3rd, and 4th)
