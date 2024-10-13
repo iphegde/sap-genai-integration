@@ -33,10 +33,6 @@ from fuzzywuzzy import fuzz
 
 from supabase import create_client, Client
 
-# Initialize Supabase client
-url: str = "https://grofmmixevqtoufmlqsr.supabase.co"
-key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdyb2ZtbWl4ZXZxdG91Zm1scXNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5NDU0MTMsImV4cCI6MjA0MjUyMTQxM30.dv1mwqZEh9QC8_yH05AUDeZE8s36SsqpUickVoOvKMY"
-supabase: Client = create_client(url, key)
 
 
 # Load environment variables from the .env file
@@ -381,6 +377,11 @@ def fuzzypspdesc(listofpspdescription, pspdescriptionfromtitle):
 def get_psp_data(description: str, embedding: str):
     # Query data from 'psp_data' table with matching description
     try:
+        # Initialize Supabase client
+        url: str = "https://grofmmixevqtoufmlqsr.supabase.co"
+        key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdyb2ZtbWl4ZXZxdG91Zm1scXNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5NDU0MTMsImV4cCI6MjA0MjUyMTQxM30.dv1mwqZEh9QC8_yH05AUDeZE8s36SsqpUickVoOvKMY"
+
+        supabase: Client = create_client(url, key)
         # Supabase query example
         response = supabase.from_("psp_data").select("*").eq("description", description).limit(3).execute()
         
