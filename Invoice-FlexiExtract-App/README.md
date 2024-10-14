@@ -38,6 +38,15 @@ So, you need a common logic which dynamically collect data from these semi struc
 2. Compare invoices for similarities.
 3. FIN  -- Extract Bank deatils and verity legit bank accounts before making payment.
 
+## How to test?
+Use my public link on Streamlit.io to test this.
+https://sap-genai-integration-invoice-flexiextract.streamlit.app/
+
+For Data, download or Clone the Data folder under this project. 
+and upload it as pdf invoice file.
+
+![alt text](image.png)
+
 ## Run the backend
 uvicorn backend.main:app --reload
 

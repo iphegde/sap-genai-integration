@@ -70,6 +70,7 @@ default_schema = {
 # Create an editable JSON interface in the sidebar using st_ace
 # Create an editable JSON interface in the sidebar using st_ace
 with st.sidebar:
+ try:
     json_input = st_ace(
         value=json.dumps(default_schema, indent=2),
         language="json",
@@ -85,6 +86,7 @@ with st.sidebar:
         auto_update=True,
         height=400,  # Set height for better display
     )
+    
     if st.sidebar.button("Save JSON"):
         try:
             output_format = json.loads(json_input)  # Validate the JSON
@@ -93,6 +95,10 @@ with st.sidebar:
             st.error("Invalid JSON input!")
     else:
         output_format = json.loads(json_input)
+    
+
+ except json.JSONDecodeError:
+            st.error("Invalid JSON input!")
     
 
 
@@ -163,9 +169,13 @@ st.sidebar.title("About the Application")
 st.sidebar.write(
     """
     This application allows you to upload PDF invoices to extract and compare their details.
-
+    For details about test data and other details, use README.md file from the git repo.
+    For more details Visit. https://iphegde.com
+    
     **How to Use:**
     - **Process Invoice**: Upload a PDF file to extract invoice details and store them in the database.
+    You can modify the json structure above and enter any desired field you want to see and save it. Click on "Process Document" again
+    to see your field as output.
     - **Compare Invoice**: Upload a PDF file to compare it with existing invoices in the database to identify potential duplicates.
     
     **FastAPI Routes:**
@@ -173,7 +183,7 @@ st.sidebar.write(
     - `/compare_invoice/` : Compares the uploaded invoice with existing invoices in the database.
 
     The backend is powered by **FastAPI**, ensuring fast and efficient processing.
-    """
+    If you notice delay in output, its due to the public webservice provider. Thats not the real App performance."""
 )
 # Add a separator for a clean layout
 st.sidebar.markdown("---")
@@ -231,34 +241,48 @@ if options == "Process Invoice":
     st.write("Upload a PDF invoice to extract and store its details in the database.")
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-col1, col2 = st.columns(2)
 
-with col1:
-    st.subheader("Uploaded PDF Preview")
-    st.markdown("Upload a PDF file to preview it here.")
+    col1, col2 = st.columns(2)
 
-# Column 2 will always show these elements
-with col2:
-    st.subheader("JSON Output")
-    st.markdown("Extracted or comparison results will be displayed here.")
+    with col1:
+        st.subheader("Uploaded PDF Preview")
+        st.markdown("Upload a PDF file to preview it here.")
 
-
-with col1:
-    # Only process invoice if the button is clicked
-    # Display PDF only if uploaded
-    if uploaded_file is not None:
-        display_pdf(uploaded_file)
-
-    if st.button("Process Invoice") and uploaded_file is not None:
-         with col2:
-            with st.spinner("Processing..."):
-                result = process_invoice(uploaded_file, output_format)  # Call your processing function
-
-               # Store the result in session state to maintain its value across reruns
-                # st.session_state.result = result
-                st.json(result)  # Display the processed JSON data
+    # Column 2 will always show these elements
+    with col2:
+        st.subheader("JSON Output")
+        st.markdown("Extracted or comparison results will be displayed here.")
 
 
+    with col1:
+        # Only process invoice if the button is clicked
+        # Display PDF only if uploaded
+        if uploaded_file is not None:
+            display_pdf(uploaded_file)
+
+        if st.button("Process Document") and uploaded_file is not None:
+            with col2:
+                with st.spinner("Processing..."):
+                    result = process_invoice(uploaded_file, output_format)  # Call your processing function
+
+                # Store the result in session state to maintain its value across reruns
+                    # st.session_state.result = result
+                    st.json(result)  # Display the processed JSON data
+
+
+# Automatically process and compare invoice upon upload 
+elif options == "Compare Invoice":
+    st.header("Compare Invoice")
+    st.write("Coming Soon!! Under Development...")
+
+        # st.write("Upload a PDF invoice to compare it with the existing invoices in the database.")
+        # uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+
+        # if uploaded_file is not None:
+        #     display_pdf(uploaded_file)
+        #     with col2:
+        #         with st.spinner("Comparing..."):
+        #             compare_invoice(uploaded_file)
 
 
 # Column 2 will always show these elements
@@ -313,14 +337,4 @@ with col1:
 
 
 
-# # Automatically process and compare invoice upon upload
-# elif options == "Compare Invoice":
-#     st.header("Compare Invoice")
-#     st.write("Upload a PDF invoice to compare it with the existing invoices in the database.")
-#     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-#     if uploaded_file is not None:
-#         display_pdf(uploaded_file)
-        # with col2:
-        #     with st.spinner("Comparing..."):
-        #         compare_invoice(uploaded_file)
