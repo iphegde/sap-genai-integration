@@ -125,6 +125,7 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 print(sys.path)
 from Utilities.Microsoft import get_calendar_of_user
+from Utilities.SAP import post_cat2_timesheet_in_sap
 
 # Set FastAPI backend URL
 # FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
@@ -409,19 +410,46 @@ with tab3:
     uploaded_file = st.file_uploader("Upload the User Data - CSV file")
     if uploaded_file is not None:
         user_data = pd.read_csv(uploaded_file)
+        # Assuming user_data is already loaded
+        # display_names = ['Select a user'] + user_data['displayName'].tolist()
 
-
-        # user_data = pd.read_csv("Data/AzureUsers.csv")
-        # user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
+        # # user_data = pd.read_csv("Data/AzureUsers.csv")
+        # # user_data = pd.read_csv(Path("Data") / "AzureUsers.csv")
 
         st.subheader("Select a user")
-        # Extract DisplayName list for the dropdown
-        display_names =  ['Select a user'] + user_data['displayName'].tolist()
+        display_names = ['Select a user'] + user_data['displayName'].tolist()
+
+        # Initialize session state for controlling buttons and tables
+        if 'first_button_clicked' not in st.session_state:
+            st.session_state.first_button_clicked = False
+        if 'second_button_clicked' not in st.session_state:
+            st.session_state.second_button_clicked = False
+        if 'displayTable' not in st.session_state:
+            st.session_state.displayTable = None
+        if 'displayTable_psp' not in st.session_state:
+            st.session_state.displayTable_psp = ''
+
         # Streamlit dropdown for selecting a DisplayName
-        selected_name = st.selectbox( '', display_names)
+        selected_name = st.selectbox('', display_names)
+
+        # Reset session state and clear tables if a new user is selected
+        if 'last_selected_name' not in st.session_state:
+            st.session_state.last_selected_name = ''
+
+        if selected_name != st.session_state.last_selected_name:
+            st.session_state.first_button_clicked = False
+            st.session_state.second_button_clicked = False
+            st.session_state.displayTable_psp = ''
+            st.session_state.last_selected_name = selected_name
+            st.session_state.displayTable = None
+            st.session_state.updated_displayTable = None
+
+
+
         if selected_name == 'Select a user':
             st.warning("Please select a user to proceed.")
         else:
+
             user_id = user_data[user_data['displayName'] == selected_name]['id'].values[0]
             # st.write(f"{user_id}")
             # return user_id
@@ -441,7 +469,14 @@ with tab3:
             displayTable['PSP Element'] = ""
             displayTable['Network Number'] = ""
             displayTable['PSP Short Description'] = ""
-
+            
+            # # Initialize session state for controlling buttons
+            # if 'first_button_clicked' not in st.session_state:
+            #     st.session_state.first_button_clicked = False
+            # if 'displayTable_psp' not in st.session_state:
+            #     st.session_state.displayTable_psp = ''
+            # if 'second_button_clicked' not in st.session_state:
+            #     st.session_state.second_button_clicked = False
             # Check if displayTable is not None and button is clicked
             if displayTable is not None and st.button("Get PSP Element and Network from Vector Data"):
              with st.spinner("Processing..."):
@@ -466,13 +501,128 @@ with tab3:
                         displayTable.at[idx, 'PSP Element'] = psp_element
                         displayTable.at[idx, 'Network Number'] = network_number
                         displayTable.at[idx, 'PSP Short Description'] = psp_short_description
-
+                        
+                    # Simulate data generation or any process
+                    st.session_state.first_button_clicked = True
+                    
+                    displayTable_psp = displayTable
                     # Display the updated table with new columns
-                    st.subheader("Updated Calendar Data with PSP and Network Information")
-                    st.write(displayTable)
+                    # st.subheader("Updated Calendar Data with PSP and Network Information")
+                    st.session_state.displayTable_psp = displayTable_psp
 
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
+
+            if st.session_state.displayTable_psp is not None:
+                if st.session_state.first_button_clicked:
+                    st.subheader("Updated Calendar Data with PSP and Network Information")
+                st.write(st.session_state.displayTable_psp)
+
+            if st.session_state.first_button_clicked:
+              if st.button("Book Timesheet in SAP"):
+                    # Simulate data generation or any process
+                    st.session_state.second_button_clicked = True
+                    with st.spinner("Processing..."):
+                    
+                     write_logs(text=f"Button action - Book Timesheet in SAP")
+                    try:
+                        result =  post_cat2_timesheet_in_sap()
+                        st.write(result)
+                    except Exception as e:
+                        st.error(f"An error occurred: {e}")
+            else:
+                        write_logs(text=f"Else triggered - Book Timesheet in SAP")
+    
+
+
+        # st.subheader("Select a user")
+        # # Extract DisplayName list for the dropdown
+        # display_names =  ['Select a user'] + user_data['displayName'].tolist()
+        # # Streamlit dropdown for selecting a DisplayName
+        # selected_name = st.selectbox( '', display_names)
+        # if selected_name == 'Select a user':
+        #     st.warning("Please select a user to proceed.")
+        # else:
+
+        #     user_id = user_data[user_data['displayName'] == selected_name]['id'].values[0]
+        #     # st.write(f"{user_id}")
+        #     # return user_id
+
+        #     # Call function to update calendarJson when user selection changes
+        #     update_calendar(user_id)
+
+        #     # write_logs(text= f"CalenderJson {user_id} {st.session_state.calendarJson}")
+        #     # st.header("Predict PSP from Meeting Data")
+                
+        #     displayTable = convert_json_to_table()
+
+        #     st.subheader("Calendar Data")
+        #     st.write(displayTable)
+
+        #     # Add new columns for PSP element, Network Number, and PSP Short Description
+        #     displayTable['PSP Element'] = ""
+        #     displayTable['Network Number'] = ""
+        #     displayTable['PSP Short Description'] = ""
+            
+        #     # Initialize session state for controlling buttons
+        #     if 'first_button_clicked' not in st.session_state:
+        #         st.session_state.first_button_clicked = False
+        #     if 'second_button_clicked' not in st.session_state:
+        #         st.session_state.second_button_clicked = False
+        #     # Check if displayTable is not None and button is clicked
+        #     if displayTable is not None and st.button("Get PSP Element and Network from Vector Data"):
+        #      with st.spinner("Processing..."):
+        #         try:
+        #             # Iterate over rows using itertuples and update new columns with predictions
+        #             for idx, row in enumerate(displayTable.itertuples(index=False)):
+        #                 subject = row.subject
+        #                 bodyPreview = row.bodyPreview
+
+        #                 # Log the extracted values
+        #                 # write_logs(text=f"values --------------------------> = {subject} and {bodyPreview}")
+
+        #                 # Get predictions (assumed function call to get the response)
+        #                 predictions = get_psp_network(subject, bodyPreview)
+        #                 # st.write(predictions)
+        #                 # Extract predictions from response
+        #                 psp_element = predictions.get("PSP Element", "")
+        #                 network_number = predictions.get("Network Number", "")
+        #                 psp_short_description = predictions.get("PSP Short Description", "")
+
+        #             #     # Add the predictions back to the DataFrame
+        #                 displayTable.at[idx, 'PSP Element'] = psp_element
+        #                 displayTable.at[idx, 'Network Number'] = network_number
+        #                 displayTable.at[idx, 'PSP Short Description'] = psp_short_description
+                        
+        #             # Simulate data generation or any process
+        #             st.session_state.first_button_clicked = True
+        #             # Display the updated table with new columns
+        #             st.subheader("Updated Calendar Data with PSP and Network Information")
+        #             st.write(displayTable)
+
+        #         except Exception as e:
+        #             st.error(f"An error occurred: {e}")
+
+        #     if st.session_state.first_button_clicked:
+        #       if st.button("Book Timesheet in SAP"):
+        #             # Simulate data generation or any process
+        #             st.session_state.second_button_clicked = True
+        #             with st.spinner("Processing..."):
+                    
+        #              write_logs(text=f"Button action - Book Timesheet in SAP")
+        #             try:
+        #                 result =  post_cat2_timesheet_in_sap()
+        #                 st.write(result)
+        #             except Exception as e:
+        #                 st.error(f"An error occurred: {e}")
+        #     else:
+        #                 write_logs(text=f"Else triggered - Book Timesheet in SAP")
+    
+    
+    
+    
+    
+    
             # if displayTable is not None and st.button("Book time in SAP"):
             #     try:
                     
