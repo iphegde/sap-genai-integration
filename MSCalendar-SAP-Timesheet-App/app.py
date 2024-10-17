@@ -128,7 +128,7 @@ from Utilities.Microsoft import get_calendar_of_user
 from Utilities.SAP import post_cat2_timesheet_in_sap
 
 # Set FastAPI backend URL
-# FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
+#FASTAPI_URL = "http://localhost:8000"  # Update with your FastAPI server URL
 
 FASTAPI_URL = "https://sap-genai-integration-mssaptimesheet.onrender.com"
 
@@ -450,6 +450,26 @@ with tab3:
             st.warning("Please select a user to proceed.")
         else:
 
+
+            # Simulate data generation or any process
+            # st.session_state.second_button_clicked = True
+            # with st.spinner("Processing..."):
+            
+            #     write_logs(text=f"Button action - Book Timesheet in SAP")
+            if 1==2:
+                try:
+                    result =  post_cat2_timesheet_in_sap()
+                    if result.status_code == 201:
+                        st.success("Timesheet posted successfully in SAP.")
+                    else:
+                        st.error("Error posting timesheet in SAP.")
+                        st.write(f"Status code: {result.status_code}, Message: {result.text}")
+
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
+                
+            
+
             user_id = user_data[user_data['displayName'] == selected_name]['id'].values[0]
             # st.write(f"{user_id}")
             # return user_id
@@ -527,7 +547,12 @@ with tab3:
                      write_logs(text=f"Button action - Book Timesheet in SAP")
                     try:
                         result =  post_cat2_timesheet_in_sap()
-                        st.write(result)
+                        if result.status_code == 201:
+                            st.success("Bookings posted successfully in SAP.")
+                        else:
+                            st.error("Error posting timesheet in SAP.")
+                            st.write(f"Status code: {result.status_code}, Message: {result.text}")
+
                     except Exception as e:
                         st.error(f"An error occurred: {e}")
             else:
